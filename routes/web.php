@@ -4,6 +4,8 @@ use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\RepairJobOrderController;
 use App\Http\Controllers\TechnicianController;
+use App\Models\JobPayment;
+use App\Models\RepairJobOrder;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -11,7 +13,18 @@ Route::redirect('/', '/dashboard')->name('home');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
+        $month = now();
+
+        return Inertia::render('dashboard', [
+            'metrics' => [
+                'openRepairJobs' => RepairJobOrder::whereIn('job_status', ['Pending', 'In Progress', 'Awaiting Parts', 'On Hold'])->count(),
+                'completedRepairs' => RepairJobOrder::where('job_status', 'Completed')->count(),
+                'awaitingParts' => RepairJobOrder::where('job_status', 'Awaiting Parts')->count(),
+                'monthlyRevenue' => JobPayment::whereNotNull('paid_at')
+                    ->whereBetween('paid_at', [$month->copy()->startOfMonth(), $month->copy()->endOfMonth()])
+                    ->sum('amount'),
+            ],
+        ]);
     })->name('dashboard');
 
     Route::resource('devices', DeviceController::class)->only(['index', 'create', 'store', 'update']);

@@ -85,7 +85,7 @@ export default function RepairJobOrdersIndex({ jobOrders }: { jobOrders: Paginat
                                                     <td className="max-w-56 px-4 py-4 text-muted-foreground">{job.reported_issue}</td>
                                                     <td className="px-4 py-4">{job.technician.name}</td>
                                                     <td className="px-4 py-4"><Badge variant="outline" className={statusStyle(job.job_status)}>{job.job_status}</Badge></td>
-                                                    <td className="py-4 pl-4 text-right font-medium tabular-nums">${Number(job.total_repair_cost).toFixed(2)}</td>
+                                                    <td className="py-4 pl-4 text-right font-medium tabular-nums">₱{Number(job.total_repair_cost).toFixed(2)}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
