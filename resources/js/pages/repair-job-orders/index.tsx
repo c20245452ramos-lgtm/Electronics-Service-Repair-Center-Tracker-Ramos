@@ -1,10 +1,11 @@
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { ClipboardList, Plus } from 'lucide-react';
+import { useState } from 'react';
 
 type JobOrder = {
     id: number;
@@ -25,6 +26,8 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Repair jobs', href: '/repair-job-orders' },
 ];
+
+const jobStatuses = ['Pending', 'Diagnosing', 'In Progress', 'Awaiting Parts', 'On Hold', 'Completed'];
 
 function statusStyle(status: string) {
     switch (status) {
@@ -84,8 +87,8 @@ export default function RepairJobOrdersIndex({ jobOrders }: { jobOrders: Paginat
                                                     </td>
                                                     <td className="max-w-56 px-4 py-4 text-muted-foreground">{job.reported_issue}</td>
                                                     <td className="px-4 py-4">{job.technician.name}</td>
-                                                    <td className="px-4 py-4"><Badge variant="outline" className={statusStyle(job.job_status)}>{job.job_status}</Badge></td>
-                                                    <td className="py-4 pl-4 text-right font-medium tabular-nums">${Number(job.total_repair_cost).toFixed(2)}</td>
+                                                    <td className="px-4 py-4"><JobStatusSelect job={job} /></td>
+                                                    <td className="py-4 pl-4 text-right font-medium tabular-nums">₱{Number(job.total_repair_cost).toFixed(2)}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -105,6 +108,43 @@ export default function RepairJobOrdersIndex({ jobOrders }: { jobOrders: Paginat
                 </Card>
             </main>
         </AppLayout>
+    );
+}
+
+function JobStatusSelect({ job }: { job: JobOrder }) {
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    function updateStatus(status: string) {
+        setSaving(true);
+        setError(null);
+        router.patch(
+            `/repair-job-orders/${job.id}`,
+            { job_status: status },
+            {
+                preserveScroll: true,
+                onError: (errors) => {
+                    setError(errors.resolution_notes ?? errors.job_status ?? 'Unable to update status. Please try again.');
+                },
+                onFinish: () => setSaving(false),
+            },
+        );
+    }
+
+    return (
+        <div className="grid justify-items-start gap-1">
+            <Select value={job.job_status} onValueChange={updateStatus} disabled={saving}>
+                <SelectTrigger aria-label={`Status for job ${job.job_order_number}`} className={`h-8 min-w-32 rounded-full px-3 py-1 text-xs font-semibold ${statusStyle(job.job_status)}`}>
+                    <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                    {jobStatuses.map((status) => (
+                        <SelectItem key={status} value={status}>{status}</SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+            {error && <span className="max-w-40 text-xs text-destructive">{error}</span>}
+        </div>
     );
 }
 

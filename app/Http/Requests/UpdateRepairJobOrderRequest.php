@@ -28,7 +28,7 @@ class UpdateRepairJobOrderRequest extends FormRequest
             ],
             'reported_issue' => ['sometimes', 'string', 'max:2000'],
             'resolution_notes' => ['nullable', 'string', 'max:2000'],
-            'job_status' => ['sometimes', 'string', 'in:Pending,In Progress,Completed,Awaiting Parts,On Hold'],
+            'job_status' => ['sometimes', 'string', 'in:Pending,Diagnosing,In Progress,Completed,Awaiting Parts,On Hold'],
             'parts_cost' => ['sometimes', 'numeric', 'min:0'],
             'labor_cost' => ['sometimes', 'numeric', 'min:0'],
             'completion_date' => ['nullable', 'date'],

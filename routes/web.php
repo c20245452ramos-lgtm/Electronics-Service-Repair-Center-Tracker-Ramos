@@ -1,9 +1,12 @@
 <?php
 
-use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\RepairJobOrderController;
 use App\Http\Controllers\TechnicianController;
+use App\Models\Customer;
+use App\Models\Device;
+use App\Models\RepairJobOrder;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -11,7 +14,13 @@ Route::redirect('/', '/dashboard')->name('home');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
+        return Inertia::render('dashboard', [
+            'metrics' => [
+                'repairJobs' => RepairJobOrder::count(),
+                'devices' => Device::count(),
+                'customers' => Customer::count(),
+            ],
+        ]);
     })->name('dashboard');
 
     Route::resource('devices', DeviceController::class)->only(['index', 'create', 'store', 'update']);

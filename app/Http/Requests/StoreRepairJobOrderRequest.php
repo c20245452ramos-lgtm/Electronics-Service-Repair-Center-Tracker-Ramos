@@ -20,7 +20,7 @@ class StoreRepairJobOrderRequest extends FormRequest
             'job_order_number' => ['required', 'string', 'max:100', 'unique:repair_job_orders,job_order_number'],
             'reported_issue' => ['required', 'string', 'max:2000'],
             'resolution_notes' => ['nullable', 'string', 'max:2000'],
-            'job_status' => ['required', 'string', 'in:Pending,In Progress,Completed,Awaiting Parts,On Hold'],
+            'job_status' => ['required', 'string', 'in:Pending,Diagnosing,In Progress,Completed,Awaiting Parts,On Hold'],
             'parts_cost' => ['required', 'numeric', 'min:0'],
             'labor_cost' => ['required', 'numeric', 'min:0'],
             'completion_date' => ['nullable', 'date'],
