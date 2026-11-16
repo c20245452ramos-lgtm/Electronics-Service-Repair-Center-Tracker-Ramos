@@ -2,7 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { ClipboardList, Laptop, UsersRound } from 'lucide-react';
+import { ClipboardList, Laptop, UsersRound, Wrench } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -13,11 +13,21 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 type DashboardMetrics = {
     repairJobs: number;
+    openRepairJobs: number;
+    completedRepairs: number;
+    awaitingParts: number;
     devices: number;
     customers: number;
+    monthlyRevenue: number | string;
 };
 
 export default function Dashboard({ metrics }: { metrics: DashboardMetrics }) {
+    const monthlyRevenue = `₱${Number(metrics.monthlyRevenue).toLocaleString('en-PH', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    })}`;
+    const repairJobSummary = `${metrics.openRepairJobs} open · ${metrics.completedRepairs} completed · ${metrics.awaitingParts} awaiting parts`;
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Repair center dashboard" />
@@ -29,11 +39,11 @@ export default function Dashboard({ metrics }: { metrics: DashboardMetrics }) {
                     </div>
                 </section>
 
-                <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-label="Repair center totals">
+                <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Repair center metrics">
                     <MetricCard
                         title="Repair jobs"
                         value={metrics.repairJobs}
-                        description="All recorded repair requests"
+                        description={repairJobSummary}
                         href="/repair-job-orders"
                         icon={<ClipboardList />}
                     />
@@ -45,6 +55,7 @@ export default function Dashboard({ metrics }: { metrics: DashboardMetrics }) {
                         href="/customers"
                         icon={<UsersRound />}
                     />
+                    <MetricCard title="Revenue this month" value={monthlyRevenue} description="Payments received this month" icon={<Wrench />} />
                 </section>
             </main>
         </AppLayout>
@@ -59,23 +70,29 @@ function MetricCard({
     icon,
 }: {
     title: string;
-    value: number;
+    value: string | number;
     description: string;
-    href: string;
+    href?: string;
     icon: React.ReactNode;
 }) {
-    return (
+    const card = (
+        <Card className="hover:bg-muted/50 transition-colors">
+            <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                    <p className="text-muted-foreground text-sm font-medium">{title}</p>
+                    <span className="bg-muted text-muted-foreground rounded-md p-2">{icon}</span>
+                </div>
+                <p className="mt-4 text-2xl font-semibold tracking-tight">{value}</p>
+                <p className="text-muted-foreground mt-1 text-xs">{description}</p>
+            </CardContent>
+        </Card>
+    );
+
+    return href ? (
         <Link href={href} className="focus-visible:ring-ring block rounded-xl focus-visible:ring-2 focus-visible:outline-hidden">
-            <Card className="hover:bg-muted/50 transition-colors">
-                <CardContent className="p-5">
-                    <div className="flex items-center justify-between">
-                        <p className="text-muted-foreground text-sm font-medium">{title}</p>
-                        <span className="bg-muted text-muted-foreground rounded-md p-2">{icon}</span>
-                    </div>
-                    <p className="mt-4 text-2xl font-semibold tracking-tight">{value}</p>
-                    <p className="text-muted-foreground mt-1 text-xs">{description}</p>
-                </CardContent>
-            </Card>
+            {card}
         </Link>
+    ) : (
+        card
     );
 }

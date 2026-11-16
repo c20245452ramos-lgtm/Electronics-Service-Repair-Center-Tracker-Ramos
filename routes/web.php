@@ -6,6 +6,7 @@ use App\Http\Controllers\RepairJobOrderController;
 use App\Http\Controllers\TechnicianController;
 use App\Models\Customer;
 use App\Models\Device;
+use App\Models\JobPayment;
 use App\Models\RepairJobOrder;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -14,11 +15,19 @@ Route::redirect('/', '/dashboard')->name('home');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', function () {
+        $month = now();
+
         return Inertia::render('dashboard', [
             'metrics' => [
                 'repairJobs' => RepairJobOrder::count(),
+                'openRepairJobs' => RepairJobOrder::whereIn('job_status', ['Pending', 'Diagnosing', 'In Progress', 'Awaiting Parts', 'On Hold'])->count(),
+                'completedRepairs' => RepairJobOrder::where('job_status', 'Completed')->count(),
+                'awaitingParts' => RepairJobOrder::where('job_status', 'Awaiting Parts')->count(),
                 'devices' => Device::count(),
                 'customers' => Customer::count(),
+                'monthlyRevenue' => JobPayment::whereNotNull('paid_at')
+                    ->whereBetween('paid_at', [$month->copy()->startOfMonth(), $month->copy()->endOfMonth()])
+                    ->sum('amount'),
             ],
         ]);
     })->name('dashboard');

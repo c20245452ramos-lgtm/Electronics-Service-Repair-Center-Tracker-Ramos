@@ -50,17 +50,21 @@ export default function RepairJobOrdersIndex({ jobOrders }: { jobOrders: Paginat
             <main className="flex flex-1 flex-col gap-6 p-4 md:p-8">
                 <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                     <div>
-                        <p className="text-sm text-muted-foreground">Service desk</p>
+                        <p className="text-muted-foreground text-sm">Service desk</p>
                         <h1 className="mt-1 text-2xl font-semibold tracking-tight">Repair jobs</h1>
-                        <p className="mt-1 text-sm text-muted-foreground">Manage repair requests from intake through pickup.</p>
+                        <p className="text-muted-foreground mt-1 text-sm">Manage repair requests from intake through pickup.</p>
                     </div>
                     <Button asChild>
-                        <Link href="/repair-job-orders/create"><Plus /> New repair job</Link>
+                        <Link href="/repair-job-orders/create">
+                            <Plus /> New repair job
+                        </Link>
                     </Button>
                 </header>
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-base">All repair jobs <span className="ml-1 text-sm font-normal text-muted-foreground">({jobOrders.total})</span></CardTitle>
+                        <CardTitle className="text-base">
+                            All repair jobs <span className="text-muted-foreground ml-1 text-sm font-normal">({jobOrders.total})</span>
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
                         {jobOrders.data.length ? (
@@ -68,7 +72,7 @@ export default function RepairJobOrdersIndex({ jobOrders }: { jobOrders: Paginat
                                 <div className="overflow-x-auto">
                                     <table className="w-full min-w-[850px] text-left text-sm">
                                         <thead>
-                                            <tr className="border-y text-xs text-muted-foreground">
+                                            <tr className="text-muted-foreground border-y text-xs">
                                                 <th className="py-3 pr-4 font-medium">Job order</th>
                                                 <th className="px-4 py-3 font-medium">Customer / device</th>
                                                 <th className="px-4 py-3 font-medium">Reported issue</th>
@@ -83,25 +87,42 @@ export default function RepairJobOrdersIndex({ jobOrders }: { jobOrders: Paginat
                                                     <td className="py-4 pr-4 font-medium">{job.job_order_number}</td>
                                                     <td className="px-4 py-4">
                                                         <div className="font-medium">{job.customer.name}</div>
-                                                        <div className="mt-0.5 text-xs text-muted-foreground">{job.device.brand} {job.device.model} · {job.device.serial_number}</div>
+                                                        <div className="text-muted-foreground mt-0.5 text-xs">
+                                                            {job.device.brand} {job.device.model} · {job.device.serial_number}
+                                                        </div>
                                                     </td>
-                                                    <td className="max-w-56 px-4 py-4 text-muted-foreground">{job.reported_issue}</td>
+                                                    <td className="text-muted-foreground max-w-56 px-4 py-4">{job.reported_issue}</td>
                                                     <td className="px-4 py-4">{job.technician.name}</td>
-                                                    <td className="px-4 py-4"><JobStatusSelect job={job} /></td>
-                                                    <td className="py-4 pl-4 text-right font-medium tabular-nums">₱{Number(job.total_repair_cost).toFixed(2)}</td>
+                                                    <td className="px-4 py-4">
+                                                        <JobStatusSelect job={job} />
+                                                    </td>
+                                                    <td className="py-4 pl-4 text-right font-medium tabular-nums">
+                                                        ₱{Number(job.total_repair_cost).toFixed(2)}
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
                                     </table>
                                 </div>
-                                <Pagination links={jobOrders.links} range={`${jobOrders.from ?? 0}-${jobOrders.to ?? 0} of ${jobOrders.total} jobs`} />
+                                <Pagination
+                                    links={jobOrders.links}
+                                    range={`${jobOrders.from ?? 0}-${jobOrders.to ?? 0} of ${jobOrders.total} jobs`}
+                                />
                             </>
                         ) : (
                             <div className="flex flex-col items-center py-16 text-center">
-                                <span className="rounded-full bg-muted p-4 text-muted-foreground"><ClipboardList className="size-6" /></span>
+                                <span className="bg-muted text-muted-foreground rounded-full p-4">
+                                    <ClipboardList className="size-6" />
+                                </span>
                                 <h2 className="mt-4 font-medium">No repair jobs yet</h2>
-                                <p className="mt-1 max-w-sm text-sm text-muted-foreground">Start by recording a repair request for a registered device.</p>
-                                <Button asChild className="mt-5"><Link href="/repair-job-orders/create"><Plus /> Create a repair job</Link></Button>
+                                <p className="text-muted-foreground mt-1 max-w-sm text-sm">
+                                    Start by recording a repair request for a registered device.
+                                </p>
+                                <Button asChild className="mt-5">
+                                    <Link href="/repair-job-orders/create">
+                                        <Plus /> Create a repair job
+                                    </Link>
+                                </Button>
                             </div>
                         )}
                     </CardContent>
@@ -134,16 +155,21 @@ function JobStatusSelect({ job }: { job: JobOrder }) {
     return (
         <div className="grid justify-items-start gap-1">
             <Select value={job.job_status} onValueChange={updateStatus} disabled={saving}>
-                <SelectTrigger aria-label={`Status for job ${job.job_order_number}`} className={`h-8 min-w-32 rounded-full px-3 py-1 text-xs font-semibold ${statusStyle(job.job_status)}`}>
+                <SelectTrigger
+                    aria-label={`Status for job ${job.job_order_number}`}
+                    className={`h-8 min-w-32 rounded-full px-3 py-1 text-xs font-semibold ${statusStyle(job.job_status)}`}
+                >
                     <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                     {jobStatuses.map((status) => (
-                        <SelectItem key={status} value={status}>{status}</SelectItem>
+                        <SelectItem key={status} value={status}>
+                            {status}
+                        </SelectItem>
                     ))}
                 </SelectContent>
             </Select>
-            {error && <span className="max-w-40 text-xs text-destructive">{error}</span>}
+            {error && <span className="text-destructive max-w-40 text-xs">{error}</span>}
         </div>
     );
 }
@@ -151,10 +177,16 @@ function JobStatusSelect({ job }: { job: JobOrder }) {
 function Pagination({ links, range }: { links: PaginationLink[]; range: string }) {
     return (
         <nav className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t pt-4" aria-label="Pagination">
-            <p className="text-sm text-muted-foreground">{range}</p>
+            <p className="text-muted-foreground text-sm">{range}</p>
             <div className="flex gap-1">
                 {links.map((link, index) => (
-                    <Button key={`${link.label}-${index}`} variant={link.active ? 'secondary' : 'ghost'} size="sm" disabled={!link.url} asChild={Boolean(link.url)}>
+                    <Button
+                        key={`${link.label}-${index}`}
+                        variant={link.active ? 'secondary' : 'ghost'}
+                        size="sm"
+                        disabled={!link.url}
+                        asChild={Boolean(link.url)}
+                    >
                         {link.url ? <Link href={link.url}>{paginationLabel(link.label)}</Link> : <span>{paginationLabel(link.label)}</span>}
                     </Button>
                 ))}
@@ -164,5 +196,5 @@ function Pagination({ links, range }: { links: PaginationLink[]; range: string }
 }
 
 function paginationLabel(label: string) {
-    return label.replace(/&laquo;|&raquo;/g, (entity) => entity === '&laquo;' ? '‹' : '›');
+    return label.replace(/&laquo;|&raquo;/g, (entity) => (entity === '&laquo;' ? '‹' : '›'));
 }

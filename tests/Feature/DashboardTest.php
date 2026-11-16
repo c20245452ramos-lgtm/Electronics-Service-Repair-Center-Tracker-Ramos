@@ -46,7 +46,11 @@ class DashboardTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('dashboard')
                 ->where('metrics.repairJobs', 1)
+                ->where('metrics.openRepairJobs', 1)
+                ->where('metrics.completedRepairs', 0)
+                ->where('metrics.awaitingParts', 0)
                 ->where('metrics.devices', 1)
-                ->where('metrics.customers', 1));
+                ->where('metrics.customers', 1)
+                ->where('metrics.monthlyRevenue', 0));
     }
 }
