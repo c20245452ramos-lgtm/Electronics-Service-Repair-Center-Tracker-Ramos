@@ -61,7 +61,7 @@ export default function CreateRepairJobOrder({ customers, devices, technicians }
                             </div>
                         ) : (
                             <form onSubmit={submit} className="grid gap-5 sm:grid-cols-2">
-                                <Field label="Job order number" id="job_order_number" value={data.job_order_number} error={errors.job_order_number} onChange={(value) => setData('job_order_number', value)} required placeholder="RO-2026-0001" />
+                                <Field label="Job order number" id="job_order_number" value={data.job_order_number} error={errors.job_order_number} maxLength={20} onChange={(value) => setData('job_order_number', value)} required placeholder="RO-2026-0001" />
                                 <SelectField id="job_status" label="Status" value={data.job_status} error={errors.job_status} onChange={(value) => setData('job_status', value)} options={['Pending', 'In Progress', 'Awaiting Parts', 'On Hold', 'Completed']} />
                                 <SelectField id="customer_id" label="Customer" value={data.customer_id} error={errors.customer_id} onChange={(value) => setData('customer_id', value)} options={customers.map((customer) => ({ value: String(customer.id), label: customer.name }))} />
                                 <SelectField id="device_id" label="Device" value={data.device_id} error={errors.device_id} onChange={(value) => setData('device_id', value)} options={devices.map((device) => ({ value: String(device.id), label: `${device.brand} ${device.model} · ${device.serial_number}` }))} />
@@ -110,11 +110,11 @@ function SelectField({ id, label, value, error, onChange, options }: { id: strin
     );
 }
 
-function Field({ label, id, type = 'text', value, error, onChange, required, placeholder, min, step }: { label: string; id: string; type?: string; value: string; error?: string; onChange: (value: string) => void; required?: boolean; placeholder?: string; min?: string; step?: string }) {
+function Field({ label, id, type = 'text', value, error, onChange, required, placeholder, min, step, maxLength }: { label: string; id: string; type?: string; value: string; error?: string; onChange: (value: string) => void; required?: boolean; placeholder?: string; min?: string; step?: string; maxLength?: number }) {
     return (
         <div className="grid gap-2">
             <Label htmlFor={id}>{label}</Label>
-            <Input id={id} type={type} required={required} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} min={min} step={step} />
+            <Input id={id} type={type} required={required} maxLength={maxLength} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} min={min} step={step} />
             <InputError message={error} />
         </div>
     );

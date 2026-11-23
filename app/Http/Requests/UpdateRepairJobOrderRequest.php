@@ -23,7 +23,7 @@ class UpdateRepairJobOrderRequest extends FormRequest
             'job_order_number' => [
                 'sometimes',
                 'string',
-                'max:100',
+                'max:20',
                 Rule::unique('repair_job_orders', 'job_order_number')->ignore($jobId),
             ],
             'reported_issue' => ['sometimes', 'string', 'max:2000'],
@@ -35,6 +35,13 @@ class UpdateRepairJobOrderRequest extends FormRequest
             'payments' => ['nullable', 'array'],
             'payments.*.amount' => ['nullable', 'numeric', 'min:0'],
             'payments.*.payment_method' => ['nullable', 'string', 'max:50'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'job_order_number.max' => 'The job order number may not be longer than 20 characters.',
         ];
     }
 }

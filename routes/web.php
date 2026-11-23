@@ -6,7 +6,6 @@ use App\Http\Controllers\RepairJobOrderController;
 use App\Http\Controllers\TechnicianController;
 use App\Models\Customer;
 use App\Models\Device;
-use App\Models\JobPayment;
 use App\Models\RepairJobOrder;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -25,9 +24,9 @@ Route::middleware(['auth'])->group(function () {
                 'awaitingParts' => RepairJobOrder::where('job_status', 'Awaiting Parts')->count(),
                 'devices' => Device::count(),
                 'customers' => Customer::count(),
-                'monthlyRevenue' => JobPayment::whereNotNull('paid_at')
-                    ->whereBetween('paid_at', [$month->copy()->startOfMonth(), $month->copy()->endOfMonth()])
-                    ->sum('amount'),
+                'monthlyRevenue' => RepairJobOrder::where('job_status', 'Completed')
+                    ->whereBetween('completion_date', [$month->copy()->startOfMonth()->toDateString(), $month->copy()->endOfMonth()->toDateString()])
+                    ->sum('total_repair_cost'),
             ],
         ]);
     })->name('dashboard');

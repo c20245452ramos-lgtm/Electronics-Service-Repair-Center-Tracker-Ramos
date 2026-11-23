@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { capitalizeFirstLetter } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, LoaderCircle } from 'lucide-react';
@@ -61,10 +62,10 @@ export default function CreateDevice({ customers }: { customers: Customer[] }) {
                                     </select>
                                     <InputError message={errors.customer_id} />
                                 </div>
-                                <Field label="Brand" id="brand" value={data.brand} error={errors.brand} onChange={(value) => setData('brand', value)} required placeholder="Apple" />
-                                <Field label="Model" id="model" value={data.model} error={errors.model} onChange={(value) => setData('model', value)} required placeholder="MacBook Pro 14&quot;" />
-                                <Field label="Device type" id="device_type" value={data.device_type} error={errors.device_type} onChange={(value) => setData('device_type', value)} placeholder="Laptop, phone, tablet..." />
-                                <Field label="Serial number" id="serial_number" value={data.serial_number} error={errors.serial_number} onChange={(value) => setData('serial_number', value)} required placeholder="C02XXXXXXXXX" />
+                                <Field label="Brand" id="brand" value={data.brand} error={errors.brand} maxLength={20} onChange={(value) => setData('brand', capitalizeFirstLetter(value))} required placeholder="Apple" />
+                                <Field label="Model" id="model" value={data.model} error={errors.model} maxLength={20} onChange={(value) => setData('model', capitalizeFirstLetter(value))} required placeholder="MacBook Pro 14&quot;" />
+                                <Field label="Device type" id="device_type" value={data.device_type} error={errors.device_type} maxLength={20} onChange={(value) => setData('device_type', capitalizeFirstLetter(value.replace(/[^a-zA-Z ]/g, '')))} placeholder="Laptop, phone, tablet..." />
+                                <Field label="Serial number" id="serial_number" value={data.serial_number} error={errors.serial_number} maxLength={20} onChange={(value) => setData('serial_number', value)} required placeholder="C02XXXXXXXXX" />
                                 <Field label="Purchase date" id="purchase_date" type="date" value={data.purchase_date} error={errors.purchase_date} onChange={(value) => setData('purchase_date', value)} />
                                 <div className="flex gap-2 sm:col-span-2">
                                     <Button type="submit" disabled={processing || customers.length === 0}>{processing && <LoaderCircle className="animate-spin" />} Save device</Button>
@@ -79,11 +80,11 @@ export default function CreateDevice({ customers }: { customers: Customer[] }) {
     );
 }
 
-function Field({ label, id, type = 'text', value, error, onChange, required, placeholder }: { label: string; id: string; type?: string; value: string; error?: string; onChange: (value: string) => void; required?: boolean; placeholder?: string }) {
+function Field({ label, id, type = 'text', value, error, onChange, required, placeholder, maxLength }: { label: string; id: string; type?: string; value: string; error?: string; onChange: (value: string) => void; required?: boolean; placeholder?: string; maxLength?: number }) {
     return (
         <div className="grid gap-2">
             <Label htmlFor={id}>{label}</Label>
-            <Input id={id} type={type} required={required} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
+            <Input id={id} type={type} required={required} maxLength={maxLength} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
             <InputError message={error} />
         </div>
     );

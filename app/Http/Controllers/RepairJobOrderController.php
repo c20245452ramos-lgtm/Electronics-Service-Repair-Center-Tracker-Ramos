@@ -20,8 +20,16 @@ class RepairJobOrderController extends Controller
 
     public function index(): Response
     {
+        $showCompletedHistory = request()->query('view') === 'history';
+        $jobOrders = RepairJobOrder::with(['customer', 'device', 'technician']);
+
+        if ($showCompletedHistory) {
+            $jobOrders->where('job_status', 'Completed')->orderByDesc('completion_date');
+        }
+
         return Inertia::render('repair-job-orders/index', [
-            'jobOrders' => RepairJobOrder::with(['customer', 'device', 'technician'])->latest()->paginate(15),
+            'jobOrders' => $jobOrders->latest()->paginate(15)->withQueryString(),
+            'showCompletedHistory' => $showCompletedHistory,
         ]);
     }
 

@@ -55,7 +55,7 @@ export default function Dashboard({ metrics }: { metrics: DashboardMetrics }) {
                         href="/customers"
                         icon={<UsersRound />}
                     />
-                    <MetricCard title="Revenue this month" value={monthlyRevenue} description="Payments received this month" icon={<Wrench />} />
+                    <MetricCard title="Revenue this month" value={monthlyRevenue} description="Completed repairs this month" icon={<Wrench />} />
                 </section>
             </main>
         </AppLayout>

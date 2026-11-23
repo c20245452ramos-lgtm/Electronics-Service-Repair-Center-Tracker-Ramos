@@ -69,7 +69,14 @@ class RepairCenterService
     public function updateRepairJobOrder(int $id, array $data): RepairJobOrder
     {
         return DB::transaction(function () use ($id, $data) {
-            $jobOrder = RepairJobOrder::findOrFail($id);
+            $jobOrder = RepairJobOrder::query()->lockForUpdate()->findOrFail($id);
+
+            if ($jobOrder->job_status === 'Completed') {
+                throw ValidationException::withMessages([
+                    'job_status' => ['Completed repair jobs cannot be changed.'],
+                ]);
+            }
+
             $jobOrder->fill($this->prepareRepairJobOrderData($data, $jobOrder));
             $jobOrder->save();
 
@@ -127,6 +134,10 @@ class RepairCenterService
             throw ValidationException::withMessages([
                 'resolution_notes' => ['Resolution notes are required when the status is Completed.'],
             ]);
+        }
+
+        if (strtoupper((string) $status) === 'COMPLETED' && blank($data['completion_date'] ?? $jobOrder?->completion_date)) {
+            $data['completion_date'] = now()->toDateString();
         }
 
         return $data;

@@ -17,7 +17,7 @@ class StoreRepairJobOrderRequest extends FormRequest
             'customer_id' => ['required', 'exists:customers,id'],
             'device_id' => ['required', 'exists:devices,id'],
             'technician_id' => ['required', 'exists:technicians,id'],
-            'job_order_number' => ['required', 'string', 'max:100', 'unique:repair_job_orders,job_order_number'],
+            'job_order_number' => ['required', 'string', 'max:20', 'unique:repair_job_orders,job_order_number'],
             'reported_issue' => ['required', 'string', 'max:2000'],
             'resolution_notes' => ['nullable', 'string', 'max:2000'],
             'job_status' => ['required', 'string', 'in:Pending,Diagnosing,In Progress,Completed,Awaiting Parts,On Hold'],
@@ -35,6 +35,7 @@ class StoreRepairJobOrderRequest extends FormRequest
         return [
             'resolution_notes.required' => 'Resolution notes are required when the job is marked as Completed.',
             'job_status.in' => 'The selected job status is invalid.',
+            'job_order_number.max' => 'The job order number may not be longer than 20 characters.',
         ];
     }
 }

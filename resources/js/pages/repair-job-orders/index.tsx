@@ -43,7 +43,7 @@ function statusStyle(status: string) {
     }
 }
 
-export default function RepairJobOrdersIndex({ jobOrders }: { jobOrders: Paginated<JobOrder> }) {
+export default function RepairJobOrdersIndex({ jobOrders, showCompletedHistory }: { jobOrders: Paginated<JobOrder>; showCompletedHistory: boolean }) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Repair jobs" />
@@ -51,8 +51,14 @@ export default function RepairJobOrdersIndex({ jobOrders }: { jobOrders: Paginat
                 <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                     <div>
                         <p className="text-muted-foreground text-sm">Service desk</p>
-                        <h1 className="mt-1 text-2xl font-semibold tracking-tight">Repair jobs</h1>
-                        <p className="text-muted-foreground mt-1 text-sm">Manage repair requests from intake through pickup.</p>
+                        <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+                            {showCompletedHistory ? 'Completed repair history' : 'Repair jobs'}
+                        </h1>
+                        <p className="text-muted-foreground mt-1 text-sm">
+                            {showCompletedHistory
+                                ? 'Review completed repairs and their completion dates.'
+                                : 'Manage repair requests from intake through pickup.'}
+                        </p>
                     </div>
                     <Button asChild>
                         <Link href="/repair-job-orders/create">
@@ -60,10 +66,19 @@ export default function RepairJobOrdersIndex({ jobOrders }: { jobOrders: Paginat
                         </Link>
                     </Button>
                 </header>
+                <nav className="flex gap-2" aria-label="Repair job views">
+                    <Button variant={showCompletedHistory ? 'outline' : 'secondary'} asChild>
+                        <Link href="/repair-job-orders">All jobs</Link>
+                    </Button>
+                    <Button variant={showCompletedHistory ? 'secondary' : 'outline'} asChild>
+                        <Link href="/repair-job-orders?view=history">Completed history</Link>
+                    </Button>
+                </nav>
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-base">
-                            All repair jobs <span className="text-muted-foreground ml-1 text-sm font-normal">({jobOrders.total})</span>
+                            {showCompletedHistory ? 'Completed repairs' : 'All repair jobs'}{' '}
+                            <span className="text-muted-foreground ml-1 text-sm font-normal">({jobOrders.total})</span>
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -78,6 +93,7 @@ export default function RepairJobOrdersIndex({ jobOrders }: { jobOrders: Paginat
                                                 <th className="px-4 py-3 font-medium">Reported issue</th>
                                                 <th className="px-4 py-3 font-medium">Technician</th>
                                                 <th className="px-4 py-3 font-medium">Status</th>
+                                                {showCompletedHistory && <th className="px-4 py-3 font-medium">Completed on</th>}
                                                 <th className="py-3 pl-4 text-right font-medium">Total</th>
                                             </tr>
                                         </thead>
@@ -96,6 +112,11 @@ export default function RepairJobOrdersIndex({ jobOrders }: { jobOrders: Paginat
                                                     <td className="px-4 py-4">
                                                         <JobStatusSelect job={job} />
                                                     </td>
+                                                    {showCompletedHistory && (
+                                                        <td className="text-muted-foreground px-4 py-4">
+                                                            {job.completion_date ? formatDate(job.completion_date) : '—'}
+                                                        </td>
+                                                    )}
                                                     <td className="py-4 pl-4 text-right font-medium tabular-nums">
                                                         ₱{Number(job.total_repair_cost).toFixed(2)}
                                                     </td>
@@ -114,15 +135,19 @@ export default function RepairJobOrdersIndex({ jobOrders }: { jobOrders: Paginat
                                 <span className="bg-muted text-muted-foreground rounded-full p-4">
                                     <ClipboardList className="size-6" />
                                 </span>
-                                <h2 className="mt-4 font-medium">No repair jobs yet</h2>
+                                <h2 className="mt-4 font-medium">{showCompletedHistory ? 'No completed repairs yet' : 'No repair jobs yet'}</h2>
                                 <p className="text-muted-foreground mt-1 max-w-sm text-sm">
-                                    Start by recording a repair request for a registered device.
+                                    {showCompletedHistory
+                                        ? 'Completed repair jobs will appear here for future reference.'
+                                        : 'Start by recording a repair request for a registered device.'}
                                 </p>
-                                <Button asChild className="mt-5">
-                                    <Link href="/repair-job-orders/create">
-                                        <Plus /> Create a repair job
-                                    </Link>
-                                </Button>
+                                {!showCompletedHistory && (
+                                    <Button asChild className="mt-5">
+                                        <Link href="/repair-job-orders/create">
+                                            <Plus /> Create a repair job
+                                        </Link>
+                                    </Button>
+                                )}
                             </div>
                         )}
                     </CardContent>
@@ -152,6 +177,17 @@ function JobStatusSelect({ job }: { job: JobOrder }) {
         );
     }
 
+    if (job.job_status === 'Completed') {
+        return (
+            <span
+                aria-label={`Status for job ${job.job_order_number}: Completed`}
+                className={`inline-flex h-8 min-w-32 items-center rounded-full border px-3 py-1 text-xs font-semibold ${statusStyle(job.job_status)}`}
+            >
+                Completed
+            </span>
+        );
+    }
+
     return (
         <div className="grid justify-items-start gap-1">
             <Select value={job.job_status} onValueChange={updateStatus} disabled={saving}>
@@ -172,6 +208,10 @@ function JobStatusSelect({ job }: { job: JobOrder }) {
             {error && <span className="text-destructive max-w-40 text-xs">{error}</span>}
         </div>
     );
+}
+
+function formatDate(date: string) {
+    return new Date(`${date.slice(0, 10)}T00:00:00`).toLocaleDateString();
 }
 
 function Pagination({ links, range }: { links: PaginationLink[]; range: string }) {
