@@ -19,13 +19,17 @@ type DashboardMetrics = {
     devices: number;
     customers: number;
     monthlyRevenue: number | string;
+    revenueHistory: { month: string; revenue: number | string }[];
 };
 
 export default function Dashboard({ metrics }: { metrics: DashboardMetrics }) {
-    const monthlyRevenue = `₱${Number(metrics.monthlyRevenue).toLocaleString('en-PH', {
+    const formatRevenue = (revenue: number | string) =>
+        `₱${Number(revenue).toLocaleString('en-PH', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
-    })}`;
+        })}`;
+    const monthlyRevenue = formatRevenue(metrics.monthlyRevenue);
+    const highestMonthRevenue = Math.max(...metrics.revenueHistory.map(({ revenue }) => Number(revenue)), 0);
     const repairJobSummary = `${metrics.openRepairJobs} open · ${metrics.completedRepairs} completed · ${metrics.awaitingParts} awaiting parts`;
 
     return (
@@ -56,6 +60,41 @@ export default function Dashboard({ metrics }: { metrics: DashboardMetrics }) {
                         icon={<UsersRound />}
                     />
                     <MetricCard title="Revenue this month" value={monthlyRevenue} description="Completed repairs this month" icon={<Wrench />} />
+                </section>
+
+                <section aria-labelledby="revenue-history-heading">
+                    <Card>
+                        <CardContent className="p-5">
+                            <div>
+                                <h2 id="revenue-history-heading" className="font-semibold">
+                                    Monthly revenue history
+                                </h2>
+                                <p className="text-muted-foreground mt-1 text-sm">Completed repair revenue over the last 12 months.</p>
+                            </div>
+                            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+                                {metrics.revenueHistory.map(({ month, revenue }) => {
+                                    const amount = Number(revenue);
+                                    const barWidth = highestMonthRevenue > 0 ? (amount / highestMonthRevenue) * 100 : 0;
+
+                                    return (
+                                        <div key={month} className="min-w-0 rounded-lg border p-3">
+                                            <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+                                                <span className="text-muted-foreground text-xs">{month}</span>
+                                                <span className="truncate text-sm font-medium">{formatRevenue(revenue)}</span>
+                                            </div>
+                                            <div className="bg-muted mt-3 h-1.5 overflow-hidden rounded-full">
+                                                <div
+                                                    className="bg-primary h-full rounded-full"
+                                                    style={{ width: `${barWidth}%` }}
+                                                    aria-hidden="true"
+                                                />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </CardContent>
+                    </Card>
                 </section>
             </main>
         </AppLayout>

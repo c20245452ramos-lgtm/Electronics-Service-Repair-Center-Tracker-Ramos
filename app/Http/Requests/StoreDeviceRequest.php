@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreDeviceRequest extends FormRequest
 {
@@ -14,7 +15,7 @@ class StoreDeviceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'customer_id' => ['required', 'exists:customers,id'],
+            'customer_id' => ['required', Rule::exists('customers', 'id')->where('is_active', true)],
             'brand' => ['required', 'string', 'max:20'],
             'model' => ['required', 'string', 'max:20'],
             'device_type' => ['nullable', 'string', 'max:20', 'regex:/^[A-Za-z ]+$/'],

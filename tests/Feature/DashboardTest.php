@@ -91,6 +91,17 @@ class DashboardTest extends TestCase
             'total_repair_cost' => 1000,
         ]);
 
+        RepairJobOrder::create([
+            'customer_id' => $customer->id,
+            'device_id' => $device->id,
+            'technician_id' => $technician->id,
+            'job_order_number' => 'RO-TEST-REVENUE-003',
+            'reported_issue' => 'Previous month repair',
+            'job_status' => 'Completed',
+            'total_repair_cost' => 700,
+            'completion_date' => now()->subMonth()->startOfMonth()->toDateString(),
+        ]);
+
         $this->patch("/repair-job-orders/{$completedJob->id}", [
             'job_status' => 'Completed',
             'resolution_notes' => 'Repair completed.',
@@ -100,6 +111,8 @@ class DashboardTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('dashboard')
-                ->where('metrics.monthlyRevenue', 500));
+                ->where('metrics.monthlyRevenue', 500)
+                ->where('metrics.revenueHistory.10.revenue', 700)
+                ->where('metrics.revenueHistory.11.revenue', 500));
     }
 }

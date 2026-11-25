@@ -15,10 +15,23 @@ class Technician extends Model
         'specialty',
         'phone',
         'email',
+        'is_active',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+        ];
+    }
 
     public function repairJobOrders(): HasMany
     {
         return $this->hasMany(RepairJobOrder::class);
+    }
+
+    public function isSuitableForDeviceType(?string $deviceType): bool
+    {
+        return blank($deviceType) || stripos($this->specialty ?? '', trim($deviceType)) !== false;
     }
 }

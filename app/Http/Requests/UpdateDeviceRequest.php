@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Device;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -14,10 +15,11 @@ class UpdateDeviceRequest extends FormRequest
 
     public function rules(): array
     {
-        $deviceId = (int) $this->route('device');
+        $device = $this->route('device');
+        $deviceId = $device instanceof Device ? $device->getKey() : (int) $device;
 
         return [
-            'customer_id' => ['sometimes', 'exists:customers,id'],
+            'customer_id' => ['sometimes', Rule::exists('customers', 'id')->where('is_active', true)],
             'brand' => ['sometimes', 'string', 'max:20'],
             'model' => ['sometimes', 'string', 'max:20'],
             'device_type' => ['nullable', 'string', 'max:20', 'regex:/^[A-Za-z ]+$/'],

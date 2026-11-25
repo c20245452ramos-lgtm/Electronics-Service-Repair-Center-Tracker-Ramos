@@ -7,10 +7,10 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, LoaderCircle } from 'lucide-react';
-import { type FormEvent } from 'react';
+import { type FormEvent, useState } from 'react';
 
 type Customer = { id: number; name: string };
-type Device = { id: number; brand: string; model: string; serial_number: string };
+type Device = { id: number; customer_id: number; brand: string; model: string; device_type: string | null; serial_number: string };
 type Technician = { id: number; name: string; specialty: string | null };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -20,6 +20,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function CreateRepairJobOrder({ customers, devices, technicians }: { customers: Customer[]; devices: Device[]; technicians: Technician[] }) {
+    const [showCustomerWarning, setShowCustomerWarning] = useState(false);
     const { data, setData, post, processing, errors } = useForm({
         customer_id: '',
         device_id: '',
@@ -39,6 +40,12 @@ export default function CreateRepairJobOrder({ customers, devices, technicians }
     }
 
     const ready = customers.length > 0 && devices.length > 0 && technicians.length > 0;
+    const customerDevices = devices.filter((device) => String(device.customer_id) === data.customer_id);
+    const selectedDevice = customerDevices.find((device) => String(device.id) === data.device_id);
+    const selectedDeviceType = selectedDevice?.device_type?.trim().toLowerCase();
+    const suitableTechnicians = selectedDeviceType
+        ? technicians.filter((technician) => technician.specialty?.toLowerCase().includes(selectedDeviceType))
+        : technicians;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -61,11 +68,84 @@ export default function CreateRepairJobOrder({ customers, devices, technicians }
                             </div>
                         ) : (
                             <form onSubmit={submit} className="grid gap-5 sm:grid-cols-2">
+                                {showCustomerWarning && (
+                                    <div
+                                        role="alert"
+                                        className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 sm:col-span-2 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200"
+                                    >
+                                        Please select a customer first to view their devices and continue with technician assignment.
+                                    </div>
+                                )}
                                 <Field label="Job order number" id="job_order_number" value={data.job_order_number} error={errors.job_order_number} maxLength={20} onChange={(value) => setData('job_order_number', value)} required placeholder="RO-2026-0001" />
-                                <SelectField id="job_status" label="Status" value={data.job_status} error={errors.job_status} onChange={(value) => setData('job_status', value)} options={['Pending', 'In Progress', 'Awaiting Parts', 'On Hold', 'Completed']} />
-                                <SelectField id="customer_id" label="Customer" value={data.customer_id} error={errors.customer_id} onChange={(value) => setData('customer_id', value)} options={customers.map((customer) => ({ value: String(customer.id), label: customer.name }))} />
-                                <SelectField id="device_id" label="Device" value={data.device_id} error={errors.device_id} onChange={(value) => setData('device_id', value)} options={devices.map((device) => ({ value: String(device.id), label: `${device.brand} ${device.model} · ${device.serial_number}` }))} />
-                                <SelectField id="technician_id" label="Technician" value={data.technician_id} error={errors.technician_id} onChange={(value) => setData('technician_id', value)} options={technicians.map((technician) => ({ value: String(technician.id), label: technician.specialty ? `${technician.name} · ${technician.specialty}` : technician.name }))} />
+                                <SelectField id="job_status" label="Status" value={data.job_status} error={errors.job_status} onChange={(value) => setData('job_status', value)} options={['Pending', 'Diagnosing', 'In Progress', 'Awaiting Parts', 'On Hold']} />
+                                <SelectField
+                                    id="customer_id"
+                                    label="Customer"
+                                    value={data.customer_id}
+                                    error={errors.customer_id}
+                                    onChange={(value) => {
+                                        setData('customer_id', value);
+                                        setData('device_id', '');
+                                        setData('technician_id', '');
+                                        setShowCustomerWarning(false);
+                                    }}
+                                    options={customers.map((customer) => ({ value: String(customer.id), label: customer.name }))}
+                                />
+                                <SelectField
+                                    id="device_id"
+                                    label="Device"
+                                    value={data.device_id}
+                                    error={errors.device_id}
+                                    onChange={(value) => {
+                                        if (!data.customer_id) {
+                                            setShowCustomerWarning(true);
+                                            return;
+                                        }
+
+                                        setData('device_id', value);
+                                        setData('technician_id', '');
+                                    }}
+                                    options={customerDevices.map((device) => ({
+                                        value: String(device.id),
+                                        label: `${device.brand} ${device.model}${device.device_type ? ` · ${device.device_type}` : ''} · ${device.serial_number}`,
+                                    }))}
+                                    disabled={Boolean(data.customer_id) && customerDevices.length === 0}
+                                    onInteract={() => {
+                                        if (!data.customer_id) {
+                                            setShowCustomerWarning(true);
+                                        }
+                                    }}
+                                    placeholder={data.customer_id ? 'Select device' : 'Select customer first'}
+                                />
+                                <SelectField
+                                    id="technician_id"
+                                    label="Technician"
+                                    value={data.technician_id}
+                                    error={errors.technician_id}
+                                    onChange={(value) => {
+                                        if (!data.customer_id) {
+                                            setShowCustomerWarning(true);
+                                            return;
+                                        }
+
+                                        setData('technician_id', value);
+                                    }}
+                                    options={suitableTechnicians.map((technician) => ({
+                                        value: String(technician.id),
+                                        label: technician.specialty ? `${technician.name} · ${technician.specialty}` : technician.name,
+                                    }))}
+                                    disabled={Boolean(selectedDeviceType) && suitableTechnicians.length === 0}
+                                    onInteract={() => {
+                                        if (!data.customer_id) {
+                                            setShowCustomerWarning(true);
+                                        }
+                                    }}
+                                />
+                                {selectedDeviceType && suitableTechnicians.length === 0 && (
+                                    <p className="text-sm text-destructive sm:col-span-2">
+                                        No technician specializes in {selectedDevice?.device_type}. Add a technician with a matching specialty.
+                                    </p>
+                                )}
                                 <Field label="Completion date" id="completion_date" type="date" value={data.completion_date} error={errors.completion_date} onChange={(value) => setData('completion_date', value)} />
                                 <div className="grid gap-2 sm:col-span-2">
                                     <Label htmlFor="reported_issue">Reported issue</Label>
@@ -80,7 +160,9 @@ export default function CreateRepairJobOrder({ customers, devices, technicians }
                                 <Field label="Parts cost" id="parts_cost" type="number" value={data.parts_cost} error={errors.parts_cost} onChange={(value) => setData('parts_cost', value)} required min="0" step="0.01" />
                                 <Field label="Labor cost" id="labor_cost" type="number" value={data.labor_cost} error={errors.labor_cost} onChange={(value) => setData('labor_cost', value)} required min="0" step="0.01" />
                                 <div className="flex gap-2 sm:col-span-2">
-                                    <Button type="submit" disabled={processing}>{processing && <LoaderCircle className="animate-spin" />} Create repair job</Button>
+                                    <Button type="submit" disabled={processing || suitableTechnicians.length === 0}>
+                                        {processing && <LoaderCircle className="animate-spin" />} Create repair job
+                                    </Button>
                                     <Button type="button" variant="outline" asChild><Link href="/repair-job-orders">Cancel</Link></Button>
                                 </div>
                             </form>
@@ -94,12 +176,41 @@ export default function CreateRepairJobOrder({ customers, devices, technicians }
 
 type Option = string | { value: string; label: string };
 
-function SelectField({ id, label, value, error, onChange, options }: { id: string; label: string; value: string; error?: string; onChange: (value: string) => void; options: Option[] }) {
+function SelectField({
+    id,
+    label,
+    value,
+    error,
+    onChange,
+    options,
+    disabled,
+    onInteract,
+    placeholder,
+}: {
+    id: string;
+    label: string;
+    value: string;
+    error?: string;
+    onChange: (value: string) => void;
+    options: Option[];
+    disabled?: boolean;
+    onInteract?: () => void;
+    placeholder?: string;
+}) {
     return (
         <div className="grid gap-2">
             <Label htmlFor={id}>{label}</Label>
-            <select id={id} required className="h-10 rounded-md border border-input bg-background px-3 text-sm" value={value} onChange={(event) => onChange(event.target.value)}>
-                <option value="">Select {label.toLowerCase()}</option>
+            <select
+                id={id}
+                required
+                disabled={disabled}
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                value={value}
+                onChange={(event) => onChange(event.target.value)}
+                onFocus={onInteract}
+                onClick={onInteract}
+            >
+                <option value="">{placeholder ?? `Select ${label.toLowerCase()}`}</option>
                 {options.map((option) => {
                     const item = typeof option === 'string' ? { value: option, label: option } : option;
                     return <option key={item.value} value={item.value}>{item.label}</option>;

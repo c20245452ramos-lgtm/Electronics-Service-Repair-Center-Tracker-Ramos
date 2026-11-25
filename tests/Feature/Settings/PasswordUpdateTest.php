@@ -48,4 +48,23 @@ class PasswordUpdateTest extends TestCase
             ->assertSessionHasErrors('current_password')
             ->assertRedirect('/settings/password');
     }
+
+    public function test_new_password_cannot_exceed_30_characters()
+    {
+        $user = User::factory()->create();
+        $password = str_repeat('a', 31);
+
+        $response = $this
+            ->actingAs($user)
+            ->from('/settings/password')
+            ->put('/settings/password', [
+                'current_password' => 'password',
+                'password' => $password,
+                'password_confirmation' => $password,
+            ]);
+
+        $response
+            ->assertSessionHasErrors('password')
+            ->assertRedirect('/settings/password');
+    }
 }

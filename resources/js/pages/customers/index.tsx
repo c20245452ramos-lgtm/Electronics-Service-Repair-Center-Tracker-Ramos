@@ -2,14 +2,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/react';
-import { Plus, UserRound, Users } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { Pencil, Plus, UserCheck, UserRound, Users, UserX } from 'lucide-react';
 
 type Customer = {
     id: number;
     name: string;
     phone: string | null;
     email: string | null;
+    is_active: boolean;
     devices_count: number;
     repair_job_orders_count: number;
 };
@@ -39,17 +40,39 @@ export default function CustomersIndex({ customers }: { customers: Page<Customer
                         {customers.data.length ? (
                             <div className="divide-y">
                                 {customers.data.map((customer) => (
-                                    <article key={customer.id} className="flex flex-col justify-between gap-3 py-4 sm:flex-row sm:items-center">
-                                        <div className="flex items-center gap-3">
+                                    <article key={customer.id} className="grid gap-3 py-4 sm:grid-cols-[minmax(0,1fr)_14rem_auto] sm:items-center">
+                                        <div className="flex min-w-0 items-center gap-3">
                                             <span className="rounded-full bg-muted p-2.5 text-muted-foreground"><UserRound className="size-5" /></span>
-                                            <div>
+                                            <div className="min-w-0">
                                                 <h2 className="font-medium">{customer.name}</h2>
-                                                <p className="text-sm text-muted-foreground">{customer.email || customer.phone || 'No contact details'}</p>
+                                                <p className="break-words text-sm text-muted-foreground">
+                                                    {customer.email || customer.phone || 'No contact details'}
+                                                    {!customer.is_active && <span className="ml-2 text-amber-700 dark:text-amber-400">Inactive</span>}
+                                                </p>
                                             </div>
                                         </div>
-                                        <div className="flex gap-5 pl-12 text-sm text-muted-foreground sm:pl-0">
-                                            <span>{customer.devices_count} devices</span>
-                                            <span>{customer.repair_job_orders_count} repair jobs</span>
+                                        <div className="ml-12 grid grid-cols-2 gap-3 text-sm text-muted-foreground sm:ml-0">
+                                            <span className="whitespace-nowrap">{customer.devices_count} devices</span>
+                                            <span className="whitespace-nowrap">{customer.repair_job_orders_count} repair jobs</span>
+                                        </div>
+                                        <div className="ml-12 flex flex-wrap gap-2 sm:ml-0">
+                                            <Button variant="outline" size="sm" asChild>
+                                                <Link href={`/customers/${customer.id}/edit`} aria-label={`Edit ${customer.name}`}>
+                                                    <Pencil /> Edit
+                                                </Link>
+                                            </Button>
+                                            <Button
+                                                variant={customer.is_active ? 'outline' : 'secondary'}
+                                                size="sm"
+                                                onClick={() => {
+                                                    const action = customer.is_active ? 'deactivate' : 'activate';
+                                                    if (window.confirm(`Are you sure you want to ${action} ${customer.name}?`)) {
+                                                        router.patch(`/customers/${customer.id}/active`, {}, { preserveScroll: true });
+                                                    }
+                                                }}
+                                            >
+                                                {customer.is_active ? <><UserX /> Deactivate</> : <><UserCheck /> Activate</>}
+                                            </Button>
                                         </div>
                                     </article>
                                 ))}

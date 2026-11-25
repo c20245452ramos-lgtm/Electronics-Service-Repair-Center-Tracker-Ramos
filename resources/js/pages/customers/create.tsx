@@ -13,25 +13,38 @@ import { type FormEvent } from 'react';
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Customers', href: '/customers' },
-    { title: 'Add customer', href: '/customers/create' },
 ];
 
-export default function CreateCustomer() {
-    const { data, setData, post, processing, errors } = useForm({ name: '', phone: '', email: '', address: '' });
+type Customer = { id: number; name: string; phone: string | null; email: string | null; address: string | null };
+
+export default function CreateCustomer({ customer }: { customer?: Customer }) {
+    const { data, setData, post, put, processing, errors } = useForm({
+        name: customer?.name ?? '',
+        phone: customer?.phone ?? '',
+        email: customer?.email ?? '',
+        address: customer?.address ?? '',
+    });
+    const editing = Boolean(customer);
 
     function submit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        post('/customers');
+        if (customer) {
+            put(`/customers/${customer.id}`);
+        } else {
+            post('/customers');
+        }
     }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Add customer" />
+            <Head title={editing ? 'Edit customer' : 'Add customer'} />
             <main className="flex flex-1 flex-col gap-6 p-4 md:p-8">
                 <div>
                     <Button variant="ghost" size="sm" asChild className="-ml-3 mb-3"><Link href="/customers"><ArrowLeft /> Back to customers</Link></Button>
-                    <h1 className="text-2xl font-semibold tracking-tight">Add customer</h1>
-                    <p className="mt-1 text-sm text-muted-foreground">Create a customer profile for device and repair tracking.</p>
+                    <h1 className="text-2xl font-semibold tracking-tight">{editing ? 'Edit customer' : 'Add customer'}</h1>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        {editing ? 'Update customer contact details. Existing repair history will be kept.' : 'Create a customer profile for device and repair tracking.'}
+                    </p>
                 </div>
                 <Card className="max-w-2xl">
                     <CardHeader><CardTitle className="text-base">Contact details</CardTitle></CardHeader>
@@ -48,7 +61,7 @@ export default function CreateCustomer() {
                                 <InputError message={errors.address} />
                             </div>
                             <div className="flex gap-2">
-                                <Button type="submit" disabled={processing}>{processing && <LoaderCircle className="animate-spin" />} Save customer</Button>
+                                <Button type="submit" disabled={processing}>{processing && <LoaderCircle className="animate-spin" />} {editing ? 'Update customer' : 'Save customer'}</Button>
                                 <Button type="button" variant="outline" asChild><Link href="/customers">Cancel</Link></Button>
                             </div>
                         </form>

@@ -22,6 +22,20 @@ class RepairCenterService
         ]);
     }
 
+    public function updateCustomer(Customer $customer, array $data): Customer
+    {
+        $customer->fill([
+            ...$data,
+            'name' => $this->sanitizeText($data['name']),
+            'phone' => $this->normalizePhone($data['phone'] ?? null),
+            'email' => $this->sanitizeText($data['email'] ?? null),
+            'address' => $this->sanitizeText($data['address'] ?? null),
+        ]);
+        $customer->save();
+
+        return $customer;
+    }
+
     public function createTechnician(array $data): Technician
     {
         return Technician::create([
@@ -33,14 +47,31 @@ class RepairCenterService
         ]);
     }
 
+    public function updateTechnician(Technician $technician, array $data): Technician
+    {
+        $technician->fill([
+            ...$data,
+            'name' => $this->sanitizeText($data['name']),
+            'specialty' => $this->sanitizeText($data['specialty'] ?? null),
+            'phone' => $this->normalizePhone($data['phone'] ?? null),
+            'email' => $this->sanitizeText($data['email'] ?? null),
+        ]);
+        $technician->save();
+
+        return $technician;
+    }
+
     public function createDevice(array $data): Device
     {
         return Device::create($this->prepareDeviceData($data));
     }
 
-    public function updateDevice(int $id, array $data): Device
+    public function updateDevice(Device|int $device, array $data): Device
     {
-        $device = Device::findOrFail($id);
+        if (is_int($device)) {
+            $device = Device::findOrFail($device);
+        }
+
         $device->fill($this->prepareDeviceData($data));
         $device->save();
 
@@ -66,10 +97,14 @@ class RepairCenterService
         });
     }
 
-    public function updateRepairJobOrder(int $id, array $data): RepairJobOrder
+    public function updateRepairJobOrder(RepairJobOrder|int $jobOrder, array $data): RepairJobOrder
     {
-        return DB::transaction(function () use ($id, $data) {
-            $jobOrder = RepairJobOrder::query()->lockForUpdate()->findOrFail($id);
+        return DB::transaction(function () use ($jobOrder, $data) {
+            if (is_int($jobOrder)) {
+                $jobOrder = RepairJobOrder::query()->lockForUpdate()->findOrFail($jobOrder);
+            } else {
+                $jobOrder = RepairJobOrder::query()->lockForUpdate()->findOrFail($jobOrder->getKey());
+            }
 
             if ($jobOrder->job_status === 'Completed') {
                 throw ValidationException::withMessages([

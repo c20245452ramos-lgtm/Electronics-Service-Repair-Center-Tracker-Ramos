@@ -2,10 +2,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/react';
-import { Plus, Wrench } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { Pencil, Plus, UserCheck, UserX, Wrench } from 'lucide-react';
 
-type Technician = { id: number; name: string; specialty: string | null; phone: string | null; email: string | null; repair_job_orders_count: number };
+type Technician = { id: number; name: string; specialty: string | null; phone: string | null; email: string | null; is_active: boolean; repair_job_orders_count: number };
 type Page<T> = { data: T[]; total: number };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -32,15 +32,39 @@ export default function TechniciansIndex({ technicians }: { technicians: Page<Te
                         {technicians.data.length ? (
                             <div className="divide-y">
                                 {technicians.data.map((technician) => (
-                                    <article key={technician.id} className="flex flex-col justify-between gap-3 py-4 sm:flex-row sm:items-center">
-                                        <div className="flex items-center gap-3">
+                                    <article key={technician.id} className="grid gap-3 py-4 sm:grid-cols-[minmax(0,1fr)_9rem_auto] sm:items-center">
+                                        <div className="flex min-w-0 items-center gap-3">
                                             <span className="rounded-full bg-muted p-2.5 text-muted-foreground"><Wrench className="size-5" /></span>
-                                            <div>
+                                            <div className="min-w-0">
                                                 <h2 className="font-medium">{technician.name}</h2>
-                                                <p className="text-sm text-muted-foreground">{technician.specialty || 'General repairs'} · {technician.email || technician.phone || 'No contact details'}</p>
+                                                <p className="break-words text-sm text-muted-foreground">
+                                                    {technician.specialty || 'General repairs'} · {technician.email || technician.phone || 'No contact details'}
+                                                    {!technician.is_active && <span className="ml-2 text-amber-700 dark:text-amber-400">Inactive</span>}
+                                                </p>
                                             </div>
                                         </div>
-                                        <p className="pl-12 text-sm text-muted-foreground sm:pl-0">{technician.repair_job_orders_count} repair jobs</p>
+                                        <p className="ml-12 text-sm text-muted-foreground sm:ml-0 sm:text-right">
+                                            {technician.repair_job_orders_count} repair jobs
+                                        </p>
+                                        <div className="ml-12 flex flex-wrap gap-2 sm:ml-0">
+                                            <Button variant="outline" size="sm" asChild>
+                                                <Link href={`/technicians/${technician.id}/edit`} aria-label={`Edit ${technician.name}`}>
+                                                    <Pencil /> Edit
+                                                </Link>
+                                            </Button>
+                                            <Button
+                                                variant={technician.is_active ? 'outline' : 'secondary'}
+                                                size="sm"
+                                                onClick={() => {
+                                                    const action = technician.is_active ? 'deactivate' : 'activate';
+                                                    if (window.confirm(`Are you sure you want to ${action} ${technician.name}?`)) {
+                                                        router.patch(`/technicians/${technician.id}/active`, {}, { preserveScroll: true });
+                                                    }
+                                                }}
+                                            >
+                                                {technician.is_active ? <><UserX /> Deactivate</> : <><UserCheck /> Activate</>}
+                                            </Button>
+                                        </div>
                                     </article>
                                 ))}
                             </div>
